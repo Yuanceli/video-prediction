@@ -5,7 +5,7 @@ pong game prediction of frames
 # ConvLSTM_pytorch
 **[This](https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py)** file **contains the implementation of Convolutional LSTM in PyTorch** made by [ndrplz](https://github.com/ndrplz) and [DavideA](https://github.com/DavideA).
 
-They started from [this](https://github.com/rogertrullo/pytorch_convlstm/blob/master/conv_lstm.py) implementation and heavily refactored it add added features to match our needs.
+They started from [this](https://github.com/rogertrullo/pytorch_convlstm/blob/master/conv_lstm.py) implementation and heavily refactored it add added features to match their needs.
 
 Please note that in this repository They implement the following dynamics:
 ![CLSTM_dynamics](https://user-images.githubusercontent.com/7113894/59357391-15c73e00-8d2b-11e9-8234-9d51a90be5dc.png)
