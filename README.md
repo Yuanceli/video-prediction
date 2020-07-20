@@ -1,6 +1,7 @@
-# video-prediction
+# Video-Prediction using ConvLSTM
 
 pong game prediction of frames
+
 
 # ConvLSTM_pytorch
 **[This](https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py)** file **contains the implementation of Convolutional LSTM in PyTorch** made by [ndrplz](https://github.com/ndrplz) and [DavideA](https://github.com/DavideA).
@@ -27,14 +28,3 @@ model = ConvLSTM(input_dim=channels,
                  bias=True,
                  return_all_layers=False)
 ```
-
-### TODO (in progress...)
-- Comment code
-- Add docs
-- Add example usage on a toy problem
-- Implement stateful mechanism
-- ...
-
-### Disclaimer
-
-This is still a work in progress and is far from being perfect: if you find any bug please don't hesitate to open an issue.
