@@ -20,7 +20,7 @@ Thanks to this guide [Video Prediction using ConvLSTM Autoencoder](https://holmd
 
 Dataset: 
 1. [Unsupervised Learning of Video Representations using LSTMs](http://www.cs.toronto.edu/~nitish/unsupervised_video/) contains 10,000 sequences each of length 20 showing 2 digits moving in a 64 x 64 frame.
-2. or you can generate the frames using [this repo](https://github.com/tychovdo/MovingMNIST)
+2. or you can generate the frames of any length based on [this repo](https://github.com/tychovdo/MovingMNIST)
 
 ### PONG
 Our version of Pong environment in Gym is [here](https://github.com/Ian-Mint/pong-underwater-rl) and it is expected to generate the dataset for frame prediction.
