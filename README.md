@@ -1,32 +1,25 @@
-# Video-Prediction using ConvLSTM
+# Video-Prediction using seq2seq ConvLSTM in Pytorch
 
-pong game prediction of frames
-
-IN PROGRESS
-
-
-# ConvLSTM_pytorch
-**[This](https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py)** file **contains the implementation of Convolutional LSTM in PyTorch** made by [ndrplz](https://github.com/ndrplz) and [DavideA](https://github.com/DavideA).
-
-They started from [this](https://github.com/rogertrullo/pytorch_convlstm/blob/master/conv_lstm.py) implementation and heavily refactored it and added features to match their needs.
-
-Please note that in this repository They implement the following dynamics:
+## ConvLSTM       [Unsupervised Learning of Video Representations using LSTMs](https://arxiv.org/abs/1502.04681)
+ConvLSTM applies convolutional layers at the beginning of LSTMs, which implements convolution to input X and hidden state H.
 ![CLSTM_dynamics](https://user-images.githubusercontent.com/7113894/59357391-15c73e00-8d2b-11e9-8234-9d51a90be5dc.png)
 
-which is a bit different from the one in the original [paper](https://arxiv.org/pdf/1506.04214.pdf).
+The ConvLSTM cell is implemented in [this repo](https://github.com/ndrplz/ConvLSTM_pytorch)
+and the seq2seq ConvLSTM is implemented in [this repo](https://github.com/holmdk/Video-Prediction-using-PyTorch)
 
-### How to Use
-The `ConvLSTM` module derives from `nn.Module` so it can be used as any other PyTorch module.
-
-The ConvLSTM class supports an arbitrary number of layers. In this case, it can be specified the hidden dimension (that is, the number of channels) and the kernel size of each layer. In the case more layers are present but a single value is provided, this is replicated for all the layers. For example, in the following snippet each of the three layers has a different hidden dimension but the same kernel size.
-
-Example usage:
+## Getting Started
+Make sure you have numpy, torch, torchvision installed.
+```bash
+git clone https://github.com/Yuanceli/video-prediction.git
+cd ./video-prediction
+python train.py
 ```
-model = ConvLSTM(input_dim=channels,
-                 hidden_dim=[64, 64, 128],
-                 kernel_size=(3, 3),
-                 num_layers=3,
-                 batch_first=True
-                 bias=True,
-                 return_all_layers=False)
-```
+
+## MNIST
+Thanks to this guide [Video Prediction using ConvLSTM Autoencoder](https://holmdk.github.io/2020/04/02/video_prediction.html)
+### Dataset: 
+1. [Unsupervised Learning of Video Representations using LSTMs](http://www.cs.toronto.edu/~nitish/unsupervised_video/) contains 10,000 sequences each of length 20 showing 2 digits moving in a 64 x 64 frame.
+2. or you can generate the frames using [this repo](https://github.com/tychovdo/MovingMNIST)
+
+## PONG
+IN PROGRESS
