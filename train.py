@@ -11,8 +11,8 @@ import torch.nn as nn
 import torch.optim as optim
 
 from MovingMNIST import MovingMNIST
-from seq2seq_ConvLSTM import EncoderDecoderConvLSTM
-from generate_video import create_array, generate_video
+from ConvLSTM import EncoderDecoderConvLSTM
+from utils import create_array, generate_video
 
 
 def training(dataloader, num_epochs):
