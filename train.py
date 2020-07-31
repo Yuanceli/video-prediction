@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jul 21 22:02:56 2020
 @author: Yuance Li
 """
 import os
@@ -67,7 +66,7 @@ def testing(dataloader):
 
 def train_dataloader(batch_size):
     train_data = MovingMNIST(
-        train=True,
+        train=True,         # 60000
         data_root=os.getcwd() + '/data',
         seq_len=20,
         image_size=64,
@@ -76,12 +75,12 @@ def train_dataloader(batch_size):
     train_loader = torch.utils.data.DataLoader(
         dataset=train_data,
         batch_size=batch_size,
-        shuffle=True)
+        shuffle=False)
     return train_loader
 
 def test_dataloader(batch_size):
     test_data = MovingMNIST(
-        train=False,
+        train=False,        # 10000
         data_root=os.getcwd() + '/data',
         seq_len=20,
         image_size=64,
@@ -90,11 +89,11 @@ def test_dataloader(batch_size):
     test_loader = torch.utils.data.DataLoader(
         dataset=test_data,
         batch_size=batch_size,
-        shuffle=True)
+        shuffle=False)
     return test_loader
 
 def get_logger(store_dir):
-    log_path = os.path.join(store_dir, 'output.log')
+    log_path = os.path.join(store_dir, 'pred.log')
     logger = logging.Logger('train_status', level=logging.DEBUG)
     stdout_handler = logging.StreamHandler()
     stdout_handler.setFormatter(logging.Formatter('%(levelname)s\t%(message)s'))
@@ -123,8 +122,10 @@ if __name__ == '__main__':
     
     # training
     train_loader = train_dataloader(batch_size=args.batch_size)
+    logger.info(f'{len(train_loader.dataset)} sequences, / {len(train_loader)} batches')
     training_loss = training(dataloader=train_loader, num_epochs=args.epochs)
-    
+
     # testing
     test_loader = test_dataloader(batch_size=args.batch_size)
+    logger.info(f'{len(test_loader.dataset)} sequences, / {len(test_loader)} batches')
     testing_loss = testing(dataloader=test_loader)
