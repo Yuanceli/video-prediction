@@ -5,6 +5,8 @@ Created on Tue Jul 21 22:02:56 2020
 """
 import os
 import argparse
+import logging
+import time
 import numpy as np
 import torch
 import torch.nn as nn
@@ -16,14 +18,17 @@ from utils import create_array, generate_video
 
 
 def training(dataloader, num_epochs):
+    # initialize
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1).to(device)
     criterion=nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr= args.lr)
-    
+    # train
     training_loss = []
+    logger.info(f'Started training on {device}')
     for epoch in range(num_epochs):
         running_loss = 0
+        start = time.time()
         for batch in dataloader:        # (b, t, c, h, w)
             batch = batch.to(device)
             x, y = batch[:, 0:10, :, :, :], batch[:, 10:, :, :, :].squeeze()
@@ -37,14 +42,19 @@ def training(dataloader, num_epochs):
             running_loss  += loss.item()
         epoch_loss = running_loss / len(dataloader)
         training_loss.append(epoch_loss)
-        print('epoch: ', epoch, ' loss: ', epoch_loss)
-    
-    torch.save(model.state_dict(), './model.pth')
+        end = time.time() - start
+        if epoch % 30 == 0:
+            torch.save(model.state_dict(), args.store_dir)
+        logger.info(f'epoch: {epoch} \t loss: {epoch_loss} \t time: {end//60}min')
+    logger.info('Finished training')
+    torch.save(model.state_dict(), args.store_dir)
     return training_loss
 
 def testing(dataloader):
+    # load
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
-    model.load_state_dict(torch.load('./model.pth'))
+    model.load_state_dict(torch.load(args.store_dir))
+    # test
     criterion=nn.MSELoss()
     for batch in dataloader:
         x, y = batch[:, 0:10, :, :, :], batch[:, 10:, :, :, :].squeeze()
@@ -83,6 +93,17 @@ def test_dataloader(batch_size):
         shuffle=True)
     return test_loader
 
+def get_logger(store_dir):
+    log_path = os.path.join(store_dir, 'output.log')
+    logger = logging.Logger('train_status', level=logging.DEBUG)
+    stdout_handler = logging.StreamHandler()
+    stdout_handler.setFormatter(logging.Formatter('%(levelname)s\t%(message)s'))
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s'))
+    logger.addHandler(file_handler)
+    logger.addHandler(stdout_handler)
+    return logger
+
 if __name__ == '__main__':
     # hyperparameters
     parser = argparse.ArgumentParser()
@@ -90,7 +111,15 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', default=16, type=int, help='batch size')
     parser.add_argument('--epochs', type=int, default=300, help='number of epochs to train for')
     parser.add_argument('--n_hidden_dim', type=int, default=64, help='number of hidden dim for ConvLSTM layers')
+    parser.add_argument('--store-dir', dest='store_dir',
+                             default=os.path.join('experiments', time.strftime("%Y-%m-%d %H.%M.%S")),
+                             help='Path to directory to store experiment results (default: ./experiments/<timestamp>/')
     args = parser.parse_args()
+    if not os.path.exists(args.store_dir):
+        os.makedirs(args.store_dir)
+        
+    # log
+    logger = get_logger(args.store_dir)
     
     # training
     train_loader = train_dataloader(batch_size=args.batch_size)
