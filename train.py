@@ -20,6 +20,7 @@ def training(dataloader, num_epochs):
     # initialize
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1).to(device)
+    path = os.path.join(args.store_dir, 'model.pth')
     criterion=nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr= args.lr)
     # train
@@ -43,16 +44,17 @@ def training(dataloader, num_epochs):
         training_loss.append(epoch_loss)
         end = time.time() - start
         if epoch % 30 == 0:
-            torch.save(model.state_dict(), args.store_dir)
+            torch.save(model.state_dict(), path)
         logger.info(f'epoch: {epoch} \t loss: {epoch_loss} \t time: {end//60}min')
     logger.info('Finished training')
-    torch.save(model.state_dict(), args.store_dir)
+    torch.save(model.state_dict(), path)
     return training_loss
 
 def testing(dataloader):
     # load
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
-    model.load_state_dict(torch.load(args.store_dir))
+    path = os.path.join(args.store_dir, 'model.pth')
+    model.load_state_dict(torch.load(path))
     # test
     criterion=nn.MSELoss()
     for batch in dataloader:
@@ -107,7 +109,7 @@ if __name__ == '__main__':
     # hyperparameters
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
-    parser.add_argument('--batch_size', default=16, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=32, type=int, help='batch size')
     parser.add_argument('--epochs', type=int, default=300, help='number of epochs to train for')
     parser.add_argument('--n_hidden_dim', type=int, default=64, help='number of hidden dim for ConvLSTM layers')
     parser.add_argument('--store-dir', dest='store_dir',
