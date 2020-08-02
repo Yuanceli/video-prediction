@@ -20,7 +20,7 @@ def training(dataloader, num_epochs):
     # initialize
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1).to(device)
-    path = os.path.join(args.store_dir, 'model.pth')
+    path = os.path.join(args.store_dir, 'model.pth.tar')
     criterion=nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr= args.lr)
     # train
@@ -53,17 +53,18 @@ def training(dataloader, num_epochs):
 def testing(dataloader):
     # load
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
-    path = os.path.join(args.store_dir, 'model.pth')
+    path = os.path.join(args.store_dir, 'model.pth.tar')
     model.load_state_dict(torch.load(path))
     # test
     criterion=nn.MSELoss()
-    for batch in dataloader:
-        x, y = batch[:, 0:10, :, :, :], batch[:, 10:, :, :, :].squeeze()
-        y_hat = model(x, future_seq=10).squeeze()
-        testing_loss = criterion(y_hat, y)
-        video_frames = create_array(y_hat, y)
-        generate_video(video_array=video_frames)
-        break        # only evaluate one batch
+    with torch.no_grad():
+        for batch in dataloader:
+            x, y = batch[:, 0:10, :, :, :], batch[:, 10:, :, :, :].squeeze()
+            y_hat = model(x, future_seq=10).squeeze()
+            testing_loss = criterion(y_hat, y)
+            video_frames = create_array(y_hat, y)
+            generate_video(video_array=video_frames)
+            break        # only evaluate one batch
     return testing_loss
 
 def train_dataloader(batch_size):
@@ -109,7 +110,7 @@ if __name__ == '__main__':
     # hyperparameters
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
-    parser.add_argument('--batch_size', default=32, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=16, type=int, help='batch size')
     parser.add_argument('--epochs', type=int, default=300, help='number of epochs to train for')
     parser.add_argument('--n_hidden_dim', type=int, default=64, help='number of hidden dim for ConvLSTM layers')
     parser.add_argument('--store-dir', dest='store_dir',
