@@ -52,20 +52,23 @@ def training(dataloader, num_epochs):
 
 def testing(dataloader):
     # load
-    model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
+    model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1).to(device)
     path = os.path.join(args.store_dir, 'model.pth.tar')
     model.load_state_dict(torch.load(path))
     # test
     criterion=nn.MSELoss()
+    logger.info(f'Started training on {device}')
     with torch.no_grad():
         for batch in dataloader:
+            batch = batch.to(device)
             x, y = batch[:, 0:10, :, :, :], batch[:, 10:, :, :, :].squeeze()
             y_hat = model(x, future_seq=10).squeeze()
             testing_loss = criterion(y_hat, y)
             video_frames = create_array(y_hat, y)
-            generate_video(video_array=video_frames)
+            generate_video(video_array=video_frames, video_filename=args.store_dir+'/result.avi')
             break        # only evaluate one batch
-    return testing_loss
+    return testing_loss.cpu()
 
 def train_dataloader(batch_size):
     train_data = MovingMNIST(
@@ -92,7 +95,7 @@ def test_dataloader(batch_size):
     test_loader = torch.utils.data.DataLoader(
         dataset=test_data,
         batch_size=batch_size,
-        shuffle=False)
+        shuffle=True)
     return test_loader
 
 def get_logger(store_dir):
@@ -125,10 +128,11 @@ if __name__ == '__main__':
     
     # training
     train_loader = train_dataloader(batch_size=args.batch_size)
-    logger.info(f'{len(train_loader.dataset)} sequences, / {len(train_loader)} batches')
+    logger.info(f'{len(train_loader.dataset)} sequences / {len(train_loader)} batches')
     training_loss = training(dataloader=train_loader, num_epochs=args.epochs)
 
     # testing
     test_loader = test_dataloader(batch_size=args.batch_size)
-    logger.info(f'{len(test_loader.dataset)} sequences, / {len(test_loader)} batches')
+    logger.info(f'{len(test_loader.dataset)} sequences / {len(test_loader)} batches')
     testing_loss = testing(dataloader=test_loader)
+    logger.info(f'test loss is {testing_loss}')
