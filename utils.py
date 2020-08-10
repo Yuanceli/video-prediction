@@ -16,7 +16,7 @@ def create_array(y_hat, y):
     return video_frames
 
 
-def generate_video(video_array, video_filename, fps=5, width=128, height=64):
+def generate_video(video_array, video_filename, fps=3, width=128, height=64):
     # initialize video writer
     fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
     out = cv2.VideoWriter(video_filename, fourcc, fps, (width, height))

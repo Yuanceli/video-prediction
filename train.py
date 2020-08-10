@@ -15,11 +15,12 @@ from MovingMNIST import MovingMNIST
 from ConvLSTM import EncoderDecoderConvLSTM
 from utils import create_array, generate_video
 
-
 def training(dataloader, num_epochs):
     # initialize
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
-    model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1).to(device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+    model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
+    model = nn.DataParallel(model)
+    model.to(device)
     path = os.path.join(args.store_dir, 'model.pth.tar')
     criterion=nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr= args.lr)
@@ -43,9 +44,9 @@ def training(dataloader, num_epochs):
         epoch_loss = running_loss / len(dataloader)
         training_loss.append(epoch_loss)
         end = time.time() - start
-        if epoch % 30 == 0:
+        if epoch % 25 == 0:
             torch.save(model.state_dict(), path)
-        logger.info(f'epoch: {epoch} \t loss: {epoch_loss} \t time: {end//60}min')
+            logger.info(f'epoch: {epoch} \t loss: {epoch_loss:.6f} \t time: {end/60:.2f}min')
     logger.info('Finished training')
     torch.save(model.state_dict(), path)
     return training_loss
@@ -53,12 +54,14 @@ def training(dataloader, num_epochs):
 def testing(dataloader):
     # load
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
-    model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1).to(device)
+    model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
+    model = nn.DataParallel(model)
+    model.to(device)
     path = os.path.join(args.store_dir, 'model.pth.tar')
     model.load_state_dict(torch.load(path))
     # test
     criterion=nn.MSELoss()
-    logger.info(f'Started training on {device}')
+    print(f'Started testing on {device}')
     with torch.no_grad():
         for batch in dataloader:
             batch = batch.to(device)
@@ -114,7 +117,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=16, type=int, help='batch size')
-    parser.add_argument('--epochs', type=int, default=300, help='number of epochs to train for')
+    parser.add_argument('--epochs', type=int, default=500, help='number of epochs to train for')
     parser.add_argument('--n_hidden_dim', type=int, default=64, help='number of hidden dim for ConvLSTM layers')
     parser.add_argument('--store-dir', dest='store_dir',
                              default=os.path.join('experiments', time.strftime("%Y-%m-%d %H.%M.%S")),
@@ -126,13 +129,26 @@ if __name__ == '__main__':
     # log
     logger = get_logger(args.store_dir)
     
+    # seed
+    random_seed = 1234
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    if torch.cuda.device_count() > 1:
+        torch.cuda.manual_seed_all(random_seed)
+    else:
+        torch.cuda.manual_seed(random_seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    
     # training
     train_loader = train_dataloader(batch_size=args.batch_size)
     logger.info(f'{len(train_loader.dataset)} sequences / {len(train_loader)} batches')
     training_loss = training(dataloader=train_loader, num_epochs=args.epochs)
 
     # testing
+    '''
     test_loader = test_dataloader(batch_size=args.batch_size)
-    logger.info(f'{len(test_loader.dataset)} sequences / {len(test_loader)} batches')
+    print(f'{len(test_loader.dataset)} sequences / {len(test_loader)} batches')
     testing_loss = testing(dataloader=test_loader)
-    logger.info(f'test loss is {testing_loss}')
+    print(f'test loss is {testing_loss}')
+    '''
