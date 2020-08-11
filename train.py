@@ -129,6 +129,7 @@ if __name__ == '__main__':
     parser.add_argument('--store-dir', dest='store_dir',
                              default=os.path.join('experiments', time.strftime("%Y-%m-%d %H.%M.%S")),
                              help='Path to directory to store experiment results (default: ./experiments/<timestamp>/')
+    parser.add_argument('--resume', action='store_true', help='Resume training switch. (omit to start from scratch)')
     args = parser.parse_args()
     if not os.path.exists(args.store_dir):
         os.makedirs(args.store_dir)
@@ -148,8 +149,7 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = False
     
     # training
-    resume = False
-    if not resume:
+    if not args.resume:
         init_model()
     train_loader = train_dataloader(batch_size=args.batch_size*torch.cuda.device_count())
     logger.info(f'{len(train_loader.dataset)} sequences / {len(train_loader)} batches')
