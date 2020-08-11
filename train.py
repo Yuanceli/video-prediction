@@ -15,13 +15,20 @@ from MovingMNIST import MovingMNIST
 from ConvLSTM import EncoderDecoderConvLSTM
 from utils import create_array, generate_video
 
-def training(dataloader, num_epochs):
-    # initialize
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+def init_model():
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
     model = nn.DataParallel(model)
-    model.to(device)
     path = os.path.join(args.store_dir, 'model.pth.tar')
+    torch.save(model.state_dict(), path)
+    
+def training(dataloader, num_epochs):
+    # initialize
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    path = os.path.join(args.store_dir, 'model.pth.tar')
+    model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
+    model = nn.DataParallel(model)
+    model.load_state_dict(torch.load(path))
+    model.to(device)
     criterion=nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr= args.lr)
     # train
@@ -44,21 +51,21 @@ def training(dataloader, num_epochs):
         epoch_loss = running_loss / len(dataloader)
         training_loss.append(epoch_loss)
         end = time.time() - start
-        if epoch % 25 == 0:
+        if epoch % 10 == 0:
             torch.save(model.state_dict(), path)
-            logger.info(f'epoch: {epoch} \t loss: {epoch_loss:.6f} \t time: {end/60:.2f}min')
+            logger.info(f'epoch: {epoch} \t loss: {epoch_loss:.8f} \t time: {end/60:.2f}min')
     logger.info('Finished training')
     torch.save(model.state_dict(), path)
     return training_loss
 
 def testing(dataloader):
     # load
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    path = os.path.join(args.store_dir, 'model.pth.tar')
     model = EncoderDecoderConvLSTM(nf=args.n_hidden_dim, in_chan=1)
     model = nn.DataParallel(model)
-    model.to(device)
-    path = os.path.join(args.store_dir, 'model.pth.tar')
     model.load_state_dict(torch.load(path))
+    model.to(device)
     # test
     criterion=nn.MSELoss()
     print(f'Started testing on {device}')
@@ -141,6 +148,9 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = False
     
     # training
+    resume = False
+    if not resume:
+        init_model()
     train_loader = train_dataloader(batch_size=args.batch_size*torch.cuda.device_count())
     logger.info(f'{len(train_loader.dataset)} sequences / {len(train_loader)} batches')
     training_loss = training(dataloader=train_loader, num_epochs=args.epochs)
