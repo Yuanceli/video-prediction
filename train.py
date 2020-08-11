@@ -141,7 +141,7 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = False
     
     # training
-    train_loader = train_dataloader(batch_size=args.batch_size)
+    train_loader = train_dataloader(batch_size=args.batch_size*torch.cuda.device_count())
     logger.info(f'{len(train_loader.dataset)} sequences / {len(train_loader)} batches')
     training_loss = training(dataloader=train_loader, num_epochs=args.epochs)
 
