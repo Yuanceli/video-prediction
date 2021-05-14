@@ -30,3 +30,7 @@ def generate_video(video_array, video_filename, fps=3, width=128, height=64):
 
     # close out the video writer
     out.release()
+
+def testtest(a,b):
+    print(a,b)
+    return
